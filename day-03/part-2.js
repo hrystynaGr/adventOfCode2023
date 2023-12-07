@@ -12,7 +12,7 @@ function readFile(file, callback) {
     });
 }
 
-readFile('./input-data.txt', (finishedGames) => {
+readFile('./input.txt', (finishedGames) => {
     processGearShema(finishedGames)
 });
 

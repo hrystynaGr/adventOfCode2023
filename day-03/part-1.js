@@ -11,7 +11,7 @@ function readFile(file, callback) {
     });
 }
 
-readFile('./input-data.txt', (finishedGames) => {
+readFile('./input.txt', (finishedGames) => {
     const arrayOfArrays = fromStringToArray(finishedGames);
     global.rowLength = arrayOfArrays[0].length
     global.columnLength = arrayOfArrays.length

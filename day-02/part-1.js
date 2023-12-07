@@ -10,7 +10,7 @@ function readFile(file, callback) {
     });
 }
 
-readFile('./input-data.txt', (finishedGames) => {
+readFile('./input.txt', (finishedGames) => {
     const arrayOfTruesAndFalses = formatInputSplitIntoGames(finishedGames);
     zeroForWrongIndexForCorrect(arrayOfTruesAndFalses);
 });
