@@ -1,5 +1,4 @@
 const fs = require('fs');
-const { start } = require('repl');
 
 function readFile(file, callback) {
     fs.readFile(file, 'utf8', (err, data) => {
@@ -11,78 +10,47 @@ function readFile(file, callback) {
     });
 }
 
-readFile('./input-2.txt', (finishedGames) => {
+readFile('./input-1.txt', (finishedGames) => {
     const startValues = processInputData(finishedGames);
-    const stepsCount = countSteps(startValues);
-
-    console.log(leastCommonMultipleArr(...stepsCount)) // 4)
+    const nextValues = lastValuesOfEachStep(startValues);
+    console.log(nextValues)
 
 });
 
 function processInputData(string) {
-    const graph = string.split('\n');
-    graph.splice(1, 1);
-    const instructions = graph.splice(0, 1)[0]
-        .replaceAll('L', 0)
-        .replaceAll('R', 1)
-        .split('');
-    const graphMap = new Map();
-    const keysWithA = [];
+    return string.split('\n').map((el) => el.split(' '));
+}
 
-    while (graph.length) {
-        const elem = graph.pop().split('=');
-        const node = elem[0].replaceAll(' ', '');
-        const neigbors = elem[1]
-            .replaceAll(' ', '')
-            .replace('(', '')
-            .replace(')', '')
-            .split(',');
-        if (node[node.length - 1] == 'A') {
-            keysWithA.push(node);
+function lastValuesOfEachStep(start) {
+    return start.map((arr) => {
+        return findNextValue(arr);
+    }).reduce((a, b) => a + b)
+
+}
+
+function findNextValue(arr) {
+    const lastVals = [];
+    let currSet = arr;
+    let indx = 0;
+    lastVals.push(+currSet[0])
+    while (!allZeroes(currSet) || currSet.length == 0) {
+        while (indx < currSet.length - 1) {
+            currSet[indx] = +currSet[indx + 1] - +currSet[indx];
+            indx++;
         }
-        graphMap.set(node, neigbors)
+        indx = 0;
+        currSet.splice(-1)
+        lastVals.push(currSet[0])
     }
-    console.log(keysWithA)
-    return [instructions, graphMap, keysWithA];
-}
-
-function countSteps(data) {
-    let [instructions, graph, starts] = data;
-    let count = 0;
-
-    while (!checkAll(starts)) {
-        for (const rule of instructions) {
-            const rrr = starts.map((elem) => {
-                if (!Number.isInteger(elem) && elem[elem.length - 1] == 'Z') {
-                    return count;
-                }
-                else if (!Number.isInteger(elem)) {
-                    return graph.get(elem)[+rule];
-                }
-                else {
-                    return elem;
-                }
-            })
-            count++;
-            starts = rrr;
-        }
+    indx = 0;
+    lastVals.reverse()
+    while (indx < lastVals.length) {
+        !indx ? lastVals[indx] = 0 : lastVals[indx] = lastVals[indx] - lastVals[indx - 1]
+        indx++;
     }
-
-    return starts;
+    return lastVals[lastVals.length - 1];
 }
 
-function checkAll(elems) {
-    return elems.every((elem) => Number.isInteger(elem))
-}
-
-function greatCommonDivisor(a, b) {
-    return (!b ? a : greatCommonDivisor(b, a % b))
-}
-
-function leastCommonMultiple(a, b) {
-    return (a * b) / greatCommonDivisor(a, b)
-}
-
-function leastCommonMultipleArr(...arr) {
-    return [...arr].reduce((a, b) => leastCommonMultiple(a, b));
+function allZeroes(start) {
+    return start.every((el) => el === 0);
 }
