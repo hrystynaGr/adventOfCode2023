@@ -13,8 +13,7 @@ function readFile(file, callback) {
 readFile('./input-1.txt', (finishedGames) => {
     const startValues = processInputData(finishedGames);
     const position = positionOfS(startValues);
-    const trav = findSConnections(startValues, position);
-    const stepsCount = findConnection(startValues, trav[0][0], [trav[0][1], trav[0][2]], 0);
+    const stepsCount = findConnection(startValues, 'S', [position[0], position[1]], 0);
     console.log(stepsCount);
 });
 
@@ -29,6 +28,7 @@ const connections = {
     'J': { 'up': ['|', 'F', '7'], 'down': [], 'left': ['F', 'L', '-'], 'right': [] },
     'L': { 'up': ['|', 'F', '7'], 'down': [], 'left': [], 'right': ['J', '7', '-'] },
     'F': { 'up': [], 'down': ['|', 'L', 'J'], 'left': [], 'right': ['J', '7', '-'] },
+    'S': { 'up': ['|', 'F', '7'], 'down': ['|', 'L', 'J'], 'left': ['L', 'F', '-'], 'right': ['J', '7', '-'] }
 }
 
 function positionOfS(graph) {
@@ -45,55 +45,54 @@ function positionOfS(graph) {
         i++;
     }
 }
-function findSConnections(graph, positionS) {
-    let [i, j] = positionS;
-    const res = [];
-    if (['F', '7', '|'].includes(graph[i - 1][j])) {
-        res.push([graph[i - 1][j], i - 1, j]);
-    }
-    if (['J', '7', '-'].includes(graph[i][j + 1])) {
-        res.push([graph[i][j + 1], i, j + 1]);
-    }
-    if (['|', 'L', 'J'].includes(graph[i + 1][j])) {
-        res.push([graph[i + 1][j], i + 1, j]);
-    }
-    if (['F', 'L', '-'].includes(graph[i][j - 1])) {
-        res.push([graph[i][j - 1], i, j - 1]);
-    }
-    return res;
-}
 
 function findConnection(graph, elem, positionS, count) {
     let [i, j] = positionS;
     let placeholder = '';
-    graph[i][j] = '!';
-    while (1 == 1) {
-        if (i + 1 <= graph.length && connections[elem]['down'].length && connections[elem]['down']?.includes(graph[i + 1][j])) {
-            placeholder = graph[i + 1][j];
-            graph[i + 1][j] = '!';
-            i = i + 1;
+    const numRows = graph.length;
+    const numColumns = graph[i].length;
+    let elemConections = [];
+    while (true) {
+        let nextPos = [];
+        elemConections = connections[elem]
+        if (i + 1 < numRows && canConnect('down', elem, graph[i + 1][j])) {
+            nextPos = [i + 1, j];
         }
-        else if (i - 1 >= 0 && connections[elem]['up'].length && connections[elem]['up']?.includes(graph[i - 1][j])) {
-            placeholder = graph[i - 1][j]
-            graph[i - 1][j] = '!';
-            i = i - 1;
+        else if (i - 1 >= 0 && canConnect('up', elem, graph[i - 1][j])) {
+            nextPos = [i - 1, j];
         }
-        else if (j - 1 >= 0 && connections[elem]['left'].length && connections[elem]['left']?.includes(graph[i][j - 1])) {
-            placeholder = graph[i][j - 1]
-            graph[i][j - 1] = '!';
-            j = j - 1;
+        else if (j - 1 >= 0 && canConnect('left', elem, graph[i][j - 1])) {
+            nextPos = [i, j - 1];
         }
-        else if (j + 1 <= graph[i].length && connections[elem]['right'].length && connections[elem]['right']?.includes(graph[i][j + 1])) {
-            placeholder = graph[i][j + 1]
-            graph[i][j + 1] = '!';
-            j = j + 1
+        else if (j + 1 < numColumns && canConnect('right', elem, graph[i][j + 1])) {
+            nextPos = [i, j + 1];
         }
-        else if (graph[i][j + 1] == 'S' || graph[i][j - 1] == 'S' || graph[i + 1][j] == 'S' || graph[i - 1][j] == 'S') {
-            console.log(Math.trunc(count / 2) + 1)
+        else if (isSNear(graph, [i, j])) {
+            return Math.trunc(count / 2) + 1;
             break;
+        }
+        if (nextPos) {
+            const [nextI, nextJ] = nextPos;
+            placeholder = graph[nextI][nextJ];
+            graph[nextI][nextJ] = '!';
+            i = nextI;
+            j = nextJ;
         }
         count += 1;
         elem = placeholder;
     }
 
+}
+
+function canConnect(direction, element, nextElement) {
+    return connections[element][direction].length &&
+        connections[element][direction].includes(nextElement);
+}
+
+function isSNear(graph, coordinates) {
+    let [i, j] = coordinates;
+    return graph[i][j + 1] == 'S' ||
+        graph[i][j - 1] == 'S' ||
+        graph[i + 1][j] == 'S' ||
+        graph[i - 1][j] == 'S'
 }
